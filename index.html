@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lab AWS CloudFormation: VPC, EC2 Privada e S3</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              aws: {
+                orange: "#FF9900",
+                dark: "#232F3E",
+                light: "#F8F9FA",
+              },
+            },
+          },
+        },
+      };
+    </script>
+    <!-- FontAwesome para ícones -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body
+    class="bg-slate-50 text-slate-800 antialiased font-sans flex flex-col min-h-screen"
+  >
+    <!-- 1. Cabeçalho (Header) -->
+    <header
+      class="bg-aws-dark text-white shadow-md border-b-4 border-aws-orange"
+    >
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col md:flex-row justify-between items-center"
+      >
+        <div class="flex items-center space-x-3 mb-4 md:mb-0">
+          <div class="bg-aws-orange text-aws-dark p-3 rounded-lg shadow">
+            <i class="fa-brands fa-aws text-2xl font-bold"></i>
+          </div>
+          <div>
+            <span
+              class="text-xs uppercase tracking-wider text-aws-orange font-semibold"
+              >Infraestrutura como Código (IaC)</span
+            >
+            <h1 class="text-2xl sm:text-3xl font-bold">
+              Lab AWS CloudFormation: VPC, EC2 Privada e S3
+            </h1>
+          </div>
+        </div>
+        <div
+          class="flex items-center space-x-2 bg-slate-800 px-4 py-2 rounded-full border border-slate-700 text-sm"
+        >
+          <span
+            class="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse"
+          ></span>
+          <span class="text-slate-300">Ambiente Automatizado AWS</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Conteúdo Principal -->
+    <main
+      class="flex-grow max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 w-full space-y-12"
+    >
+      <!-- 2. Seção de Introdução / Explicação da Atividade -->
+      <section
+        class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8"
+      >
+        <div class="max-w-3xl">
+          <div
+            class="inline-flex items-center space-x-2 bg-orange-50 text-aws-orange px-3 py-1 rounded-full text-sm font-medium mb-4"
+          >
+            <i class="fa-solid fa-graduation-cap"></i>
+            <span>Laboratório Prático de Engenharia Cloud AWS - Escola da Nuvem</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-bold text-slate-900 mb-4">
+            Objetivo da Arquitetura Automatizada
+          </h2>
+          <p class="text-slate-600 text-base sm:text-lg leading-relaxed mb-6">
+            Este laboratório demonstra a implementação prática de uma
+            infraestrutura robusta, segura e escalável na nuvem da AWS
+            utilizando o <strong>AWS CloudFormation</strong>. O objetivo central
+            é provisionar de forma automatizada e idempotente todos os recursos
+            necessários para uma aplicação web corporativa com isolamento de
+            rede, garantindo conformidade, repetibilidade e agilidade no deploy.
+          </p>
+          <div
+            class="grid grid-cols-1 sm:grid-cols-3 gap-4 border-t border-slate-100 pt-6"
+          >
+            <div class="flex items-start space-x-3">
+              <div class="bg-blue-50 text-blue-600 p-2 rounded-lg mt-1">
+                <i class="fa-solid fa-shield-halved"></i>
+              </div>
+              <div>
+                <h4 class="font-semibold text-slate-800 text-sm">
+                  Segurança por Padrão
+                </h4>
+                <p class="text-xs text-slate-500">
+                  Isolamento de sub-redes e regras restritas de firewall.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <div class="bg-orange-50 text-aws-orange p-2 rounded-lg mt-1">
+                <i class="fa-solid fa-bolt"></i>
+              </div>
+              <div>
+                <h4 class="font-semibold text-slate-800 text-sm">
+                  Automação Total
+                </h4>
+                <p class="text-xs text-slate-500">
+                  Deploy completo via template YAML/JSON com UserData.
+                </p>
+              </div>
+            </div>
+            <div class="flex items-start space-x-3">
+              <div class="bg-emerald-50 text-emerald-600 p-2 rounded-lg mt-1">
+                <i class="fa-solid fa-rotate"></i>
+              </div>
+              <div>
+                <h4 class="font-semibold text-slate-800 text-sm">
+                  Repetibilidade
+                </h4>
+                <p class="text-xs text-slate-500">
+                  Recriação do ambiente sem intervenção manual.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Seção de Destaque Visual (Card / Container da Imagem de Arquitetura) -->
+      <section
+        class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden"
+      >
+        <div
+          class="bg-slate-900 px-6 py-4 flex justify-between items-center text-white"
+        >
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-network-wired text-aws-orange"></i>
+            <h3 class="font-bold text-lg">
+              Topologia da Arquitetura da Solução
+            </h3>
+          </div>
+          <span
+            class="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded border border-slate-700"
+            >Diagrama AWS</span
+          >
+        </div>
+        <div
+          class="p-6 sm:p-10 flex flex-col items-center justify-center bg-gradient-to-b from-slate-50 to-slate-100/50"
+        >
+          <!-- Container da Imagem / Placeholder -->
+          <div
+            class="w-full max-w-4xl bg-white border-2 border-dashed border-slate-300 rounded-xl p-4 sm:p-8 text-center shadow-inner relative group"
+          >
+            <!-- Substitua o atributo src abaixo pelo link ou caminho da sua imagem de arquitetura -->
+            <img
+              src="diagrama-arquitetura-aws.png"
+              
+            />
+
+            <!-- Legenda explicativa sob a imagem -->
+            <div
+              class="mt-4 text-sm text-slate-500 flex items-center justify-center space-x-2"
+            >
+              <i class="fa-solid fa-circle-info text-aws-orange"></i>
+              <span
+                >Esquema lógico: VPC contendo Internet Gateway, Security Group e
+                Instância EC2 conectada ao S3.</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. Lista Estilizada em Tópicos (Cards ou Grid) Detalhando os Componentes -->
+      <section>
+        <div class="mb-6">
+          <h3 class="text-2xl font-bold text-slate-900">
+            Componentes Provisionados no Template
+          </h3>
+          <p class="text-slate-500 text-sm">
+            Detalhamento dos recursos criados pelo CloudFormation na AWS.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <!-- Componente 1 -->
+          <div
+            class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition duration-200 flex flex-col justify-between"
+          >
+            <div>
+              <div
+                class="w-12 h-12 rounded-lg bg-orange-50 text-aws-orange flex items-center justify-center text-xl mb-4 font-bold"
+              >
+                <i class="fa-solid fa-cloud"></i>
+              </div>
+              <h4 class="font-bold text-lg text-slate-900 mb-2">
+                VPC e Sub-rede Privada
+              </h4>
+              <p class="text-slate-600 text-sm leading-relaxed">
+                Criação de uma Virtual Private Cloud dedicada com bloco CIDR
+                isolado e configuração de sub-redes privadas para maior
+                segurança de dados sensíveis e cargas de trabalho internas.
+              </p>
+            </div>
+            <div
+              class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-aws-dark"
+            >
+              <span>Tipo: AWS::EC2::VPC</span>
+              <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded"
+                >Ativo</span
+              >
+            </div>
+          </div>
+
+          <!-- Componente 2 -->
+          <div
+            class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition duration-200 flex flex-col justify-between"
+          >
+            <div>
+              <div
+                class="w-12 h-12 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4 font-bold"
+              >
+                <i class="fa-solid fa-globe"></i>
+              </div>
+              <h4 class="font-bold text-lg text-slate-900 mb-2">
+                Internet Gateway
+              </h4>
+              <p class="text-slate-600 text-sm leading-relaxed">
+                Anexo de gateway de internet e configuração de tabelas de rotas
+                para habilitar a conectividade externa controlada e o acesso aos
+                serviços da AWS necessários para a pilha.
+              </p>
+            </div>
+            <div
+              class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-aws-dark"
+            >
+              <span>Tipo: AWS::EC2::InternetGateway</span>
+              <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded"
+                >Ativo</span
+              >
+            </div>
+          </div>
+
+          <!-- Componente 3 -->
+          <div
+            class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition duration-200 flex flex-col justify-between"
+          >
+            <div>
+              <div
+                class="w-12 h-12 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xl mb-4 font-bold"
+              >
+                <i class="fa-solid fa-lock"></i>
+              </div>
+              <h4 class="font-bold text-lg text-slate-900 mb-2">
+                Security Group (Portas 22 e 80)
+              </h4>
+              <p class="text-slate-600 text-sm leading-relaxed">
+                Grupo de segurança configurado com regras de firewall estritas,
+                liberando tráfego SSH (porta 22) para administração remota
+                segura e HTTP (porta 80) para tráfego web.
+              </p>
+            </div>
+            <div
+              class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-aws-dark"
+            >
+              <span>Tipo: AWS::EC2::SecurityGroup</span>
+              <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded"
+                >Ativo</span
+              >
+            </div>
+          </div>
+
+          <!-- Componente 4 -->
+          <div
+            class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition duration-200 flex flex-col justify-between"
+          >
+            <div>
+              <div
+                class="w-12 h-12 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center text-xl mb-4 font-bold"
+              >
+                <i class="fa-solid fa-server"></i>
+              </div>
+              <h4 class="font-bold text-lg text-slate-900 mb-2">
+                Instância EC2 (T3.micro)
+              </h4>
+              <p class="text-slate-600 text-sm leading-relaxed">
+                Instância computacional provisionada com script automatizado
+                (<code
+                  class="bg-slate-100 text-xs px-1 py-0.5 rounded text-slate-800"
+                  >UserData</code
+                >) para instalação de pacotes, dependências e servidor web no
+                boot inicial.
+              </p>
+            </div>
+            <div
+              class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-aws-dark"
+            >
+              <span>Tipo: AWS::EC2::Instance</span>
+              <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded"
+                >Ativo</span
+              >
+            </div>
+          </div>
+
+          <!-- Componente 5 -->
+          <div
+            class="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition duration-200 flex flex-col justify-between md:col-span-2 lg:col-span-2"
+          >
+            <div>
+              <div
+                class="w-12 h-12 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 font-bold"
+              >
+                <i class="fa-solid fa-database"></i>
+              </div>
+              <h4 class="font-bold text-lg text-slate-900 mb-2">
+                Bucket S3 para Arquivos Estáticos e Imagens
+              </h4>
+              <p class="text-slate-600 text-sm leading-relaxed">
+                Repositório de armazenamento de objetos altamente durável e
+                seguro, configurado via CloudFormation para hospedar ativos
+                estáticos, imagens e assets consumidos pela aplicação hospedada
+                na EC2.
+              </p>
+            </div>
+            <div
+              class="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between text-xs font-semibold text-aws-dark"
+            >
+              <span>Tipo: AWS::S3::Bucket</span>
+              <span class="text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded"
+                >Ativo</span
+              >
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- 5. Rodapé (Footer) -->
+    <footer class="bg-aws-dark text-slate-400 border-t border-slate-800 mt-16">
+      <div
+        class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row justify-between items-center text-sm"
+      >
+        <div class="flex items-center space-x-2 mb-4 md:mb-0">
+          <span class="font-bold text-white">Lab AWS CloudFormation</span>
+          <span class="text-slate-600">|</span>
+          <span>Infraestrutura como Código</span>
+        </div>
+        <div class="text-center md:text-right">
+          <p class="text-slate-300 font-medium">
+            Projeto Educacional e Prático de Engenharia Cloud & Front-end
+          </p>
+          <p class="text-xs text-slate-500 mt-1">
+            Desenvolvido com foco em automação, segurança e arquitetura em
+            nuvem.
+          </p>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>
